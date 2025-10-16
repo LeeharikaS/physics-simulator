@@ -1,0 +1,3 @@
+/Users/leeharikas/Desktop/physics-simulator/build/CMakeFiles/PhysicsSimulator.dir
+/Users/leeharikas/Desktop/physics-simulator/build/CMakeFiles/edit_cache.dir
+/Users/leeharikas/Desktop/physics-simulator/build/CMakeFiles/rebuild_cache.dir
