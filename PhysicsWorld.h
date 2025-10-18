@@ -9,10 +9,13 @@ class PhysicsWorld {
 private:
     std::vector<std::shared_ptr<RigidBody>> bodies;
     Vec3 gravity;
+    int totalCollisions;
+    int frameCollisions;
+    int previousFrameCollisions;  // ADD THIS MISSING VARIABLE
 
 public:
     PhysicsWorld(const Vec3& gravity = Vec3(0, -9.81f, 0))
-        : gravity(gravity) {}
+        : gravity(gravity), totalCollisions(0), frameCollisions(0), previousFrameCollisions(0) {}
 
     // Add a body to the simulation
     void addBody(std::shared_ptr<RigidBody> body) {
@@ -26,8 +29,14 @@ public:
         return body;
     }
 
-    // Update the entire simulation
+    // Update the entire simulation - FIXED VERSION
     void update(float deltaTime) {
+        // Store last frame's collisions for display
+        previousFrameCollisions = frameCollisions;
+        
+        // Reset frame collisions for THIS frame's counting
+        frameCollisions = 0;
+        
         // Apply forces
         for (auto& body : bodies) {
             if (!body->isStatic) {
@@ -40,22 +49,24 @@ public:
             body->update(deltaTime);
         }
 
-        // Check and resolve collisions
+        // Check and resolve collisions - COUNT PROPERLY
         for (size_t i = 0; i < bodies.size(); i++) {
             for (size_t j = i + 1; j < bodies.size(); j++) {
                 if (bodies[i]->checkSphereCollision(*bodies[j])) {
+                    // COUNT THE COLLISION FOR THIS FRAME
+                    frameCollisions++;
+                    totalCollisions++;
+                    
                     bodies[i]->resolveCollision(*bodies[j]);
                 }
             }
         }
 
-        // Handle ground collision (simple plane at y=0)
+        // Handle ground collision
         for (auto& body : bodies) {
             if (body->position.y - body->radius < 0) {
-                body->position.y = body->radius; // Push above ground
-                body->velocity.y = -body->velocity.y * body->restitution; // Bounce
-                
-                // Apply friction
+                body->position.y = body->radius;
+                body->velocity.y = -body->velocity.y * body->restitution;
                 body->velocity.x *= (1.0f - body->friction);
                 body->velocity.z *= (1.0f - body->friction);
             }
@@ -67,9 +78,26 @@ public:
         return bodies;
     }
 
+    // Get methods - RETURN THE RIGHT VALUE
+    int getTotalCollisions() const {
+        return totalCollisions;
+    }
+    
+    int getFrameCollisions() const {
+        return previousFrameCollisions;  // Return last frame's count
+    }
+    
+    // Reset collision counters
+    void resetCollisionCount() {
+        totalCollisions = 0;
+        frameCollisions = 0;
+        previousFrameCollisions = 0;
+    }
+
     // Clear all bodies
     void clear() {
         bodies.clear();
+        resetCollisionCount();
     }
 };
 
